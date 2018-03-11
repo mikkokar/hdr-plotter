@@ -1,5 +1,7 @@
 # hdr-plotter
-An interactive tool for plotting HDR histogram files
+An interactive tool for plotting HDR histogram files.
+
+![Screenshot](data/screenshot.png)
 
 To build & Run:
 
