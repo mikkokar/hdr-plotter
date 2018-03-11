@@ -1,0 +1,104 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Main</title>
+
+  <!-- Load c3.css -->
+  <link href="./bower_components/c3/c3.css" rel="stylesheet">
+
+  <!-- Load d3.js and c3.js -->
+  <script src="./bower_components/d3/d3.min.js" charset="utf-8"></script>
+  <script src="./bower_components/c3/c3.min.js"></script>
+
+</head>
+
+<body>
+
+<div id="hdrhistogram"></div>
+<!-- <script src="hdrhistogram.js"></script> -->
+<script type="text/javascript" src="/_compile/Main.elm"></script>
+<script type="text/javascript">
+    var app = Elm.Main.fullscreen();
+
+    app.ports.renderHistogram.subscribe(function(histograms) {
+        var xLabelsAt = [1, 10, 100, 1000, 10000, 100000, 1000000, 10000000].map(Math.log10)
+        var xLabelNames = ["0%", "90%", "99%", "99.9%", "99.99%", "99.999%", "99.9999%", "99.99999%"]
+
+        var columns = []
+        var names = {}
+        var xs = {}
+
+        for (i = 0; i < histograms.length; i++) {
+          var histogram = histograms[i]
+          var latenciesId = 'latencies-' + i
+          var percentilesId = 'percentiles-' + i
+
+          xs[latenciesId] = percentilesId
+
+          columns.push([percentilesId].concat(histogram.percentiles.map(Math.log10)))
+          columns.push([latenciesId].concat(histogram.latencies))
+
+          names[latenciesId] = histogram.name
+        }
+
+        var diagramTemplate = {
+            data: {
+                xs: xs,
+                columns: columns,
+                names: names
+              },
+            point: {
+                show: true
+            },
+            axis: {
+                x: {
+                    min: 0,
+                    max: 7,
+                    type: 'line',
+                    tick: {
+                        count: 8,
+                        values: xLabelsAt,
+                        format: function (d) { return xLabelNames[d] }
+                    }
+                }
+            }
+        }
+
+        var chart = c3.generate(diagramTemplate);
+    });
+
+    function readFile(file) {
+      var reader = new FileReader();
+
+      reader.onload = (function(event) {
+          var contents = event.target.result;
+
+          var portData = {
+            contents: contents,
+            fileName: file.name
+          };
+
+          app.ports.fileContentRead.send(portData);
+      });
+
+      reader.readAsText(file);
+    }
+
+    app.ports.fileSelected.subscribe(function(id) {
+      var node = document.getElementById(id);
+      if (node === null) {
+        return;
+      }
+
+      for (i = 0; i < node.files.length; i++) {
+        readFile(node.files[i]);
+      }
+    })
+
+</script>
+
+<div id="chart">
+
+</body>
+</html>
